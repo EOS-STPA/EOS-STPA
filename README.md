@@ -1,14 +1,13 @@
 # EOS-STPA Ontology Reasoning Validation
 
-This repository provides a machine-readable and reproducible proof-of-concept ontology reasoning validation for the EOS-STPA delayed red-light case.
+This repository contains supplementary artifacts for the EOS-STPA study, including:
 
-The validation demonstrates that instantiated scenario facts can be:
+* an executable ontology reasoning validation for the delayed red-light case;
+* a car-following ontology/modeling project archive; and
+* CARLA-based PPO training code for the STPA and EOS-STPA strategies.
 
-* automatically classified as a scenario-side abnormal interaction condition (SAIC);
-* linked to the corresponding collision-related hazard;
-* associated with structured scenario safety constraint (SSC) elements;
-* linked to an operationalized SSC instance; and
-* retrieved through a SPARQL query with a triple-level reasoning trace.
+The executable ontology validation materials are organized in the `ontology/`, `queries/`, `scripts/`, `results/`, and `docs/` directories. The car-following ontology/modeling project is provided in `Ontological structure.zip`, and the CARLA training implementation is provided in `EOS_STPA_CARLA_training.py`.
+
 
 ## Public repository
 
