@@ -1,0 +1,13 @@
+step,source,subject,predicate,object
+1,RDFS subclass entailment,https://EOS-STPA.github.io/EOS-STPA/ontology#SSC_DelayedRedLight_001,http://www.w3.org/1999/02/22-rdf-syntax-ns#type,https://EOS-STPA.github.io/EOS-STPA/ontology#SSC
+2,RDFS subclass entailment,https://EOS-STPA.github.io/EOS-STPA/ontology#Input_001,http://www.w3.org/1999/02/22-rdf-syntax-ns#type,https://EOS-STPA.github.io/EOS-STPA/ontology#InteractiveInput
+3,RDFS subclass entailment,https://EOS-STPA.github.io/EOS-STPA/ontology#SSC_DelayedRedLight_001,http://www.w3.org/1999/02/22-rdf-syntax-ns#type,https://EOS-STPA.github.io/EOS-STPA/ontology#SafetyAnalysisArtifact
+4,https://EOS-STPA.github.io/EOS-STPA/ontology#R1_DelayedRedLightClassification,https://EOS-STPA.github.io/EOS-STPA/ontology#Input_001,http://www.w3.org/1999/02/22-rdf-syntax-ns#type,https://EOS-STPA.github.io/EOS-STPA/ontology#DelayedRedLightSAIC
+5,https://EOS-STPA.github.io/EOS-STPA/ontology#R2_HazardRetrieval,https://EOS-STPA.github.io/EOS-STPA/ontology#Input_001,https://EOS-STPA.github.io/EOS-STPA/ontology#leadsTo,https://EOS-STPA.github.io/EOS-STPA/ontology#CollisionRelatedHazard
+6,https://EOS-STPA.github.io/EOS-STPA/ontology#R3_SSCElementRetrieval,https://EOS-STPA.github.io/EOS-STPA/ontology#Input_001,https://EOS-STPA.github.io/EOS-STPA/ontology#requiresControlSubject,https://EOS-STPA.github.io/EOS-STPA/ontology#VehicleAction
+7,https://EOS-STPA.github.io/EOS-STPA/ontology#R3_SSCElementRetrieval,https://EOS-STPA.github.io/EOS-STPA/ontology#Input_001,https://EOS-STPA.github.io/EOS-STPA/ontology#requiresControlObject,https://EOS-STPA.github.io/EOS-STPA/ontology#InBraking
+8,https://EOS-STPA.github.io/EOS-STPA/ontology#R3_SSCElementRetrieval,https://EOS-STPA.github.io/EOS-STPA/ontology#Input_001,https://EOS-STPA.github.io/EOS-STPA/ontology#hasConditionObject,https://EOS-STPA.github.io/EOS-STPA/ontology#RedLight
+9,https://EOS-STPA.github.io/EOS-STPA/ontology#R4_SSCOperationalization,https://EOS-STPA.github.io/EOS-STPA/ontology#Input_001,https://EOS-STPA.github.io/EOS-STPA/ontology#isOperationalizedBy,https://EOS-STPA.github.io/EOS-STPA/ontology#SSC_DelayedRedLight_001
+10,RDFS subclass entailment,https://EOS-STPA.github.io/EOS-STPA/ontology#Input_001,http://www.w3.org/1999/02/22-rdf-syntax-ns#type,https://EOS-STPA.github.io/EOS-STPA/ontology#SAIC
+11,RDFS subclass entailment,https://EOS-STPA.github.io/EOS-STPA/ontology#Input_001,http://www.w3.org/1999/02/22-rdf-syntax-ns#type,https://EOS-STPA.github.io/EOS-STPA/ontology#SafetyAnalysisArtifact
+12,RDFS subclass entailment,https://EOS-STPA.github.io/EOS-STPA/ontology#Input_001,http://www.w3.org/1999/02/22-rdf-syntax-ns#type,https://EOS-STPA.github.io/EOS-STPA/ontology#AbnormalInteractionCondition

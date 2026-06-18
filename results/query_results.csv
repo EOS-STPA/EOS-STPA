@@ -1,0 +1,2 @@
+saic,hazard,controlSubject,controlObject,conditionObject,faultMode,ssc,sscLabel
+https://EOS-STPA.github.io/EOS-STPA/ontology#Input_001,https://EOS-STPA.github.io/EOS-STPA/ontology#CollisionRelatedHazard,https://EOS-STPA.github.io/EOS-STPA/ontology#VehicleAction,https://EOS-STPA.github.io/EOS-STPA/ontology#InBraking,https://EOS-STPA.github.io/EOS-STPA/ontology#RedLight,https://EOS-STPA.github.io/EOS-STPA/ontology#Late,https://EOS-STPA.github.io/EOS-STPA/ontology#SSC_DelayedRedLight_001,Vehicle action shall be in braking when traffic infrastructure provides late red light

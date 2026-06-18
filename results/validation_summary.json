@@ -1,0 +1,10 @@
+{
+  "ontology_file": "ontology/eos_stpa_avx.ttl",
+  "query_file": "queries/delayed_red_light_validation.rq",
+  "asserted_triple_count": 234,
+  "materialized_graph_triple_count": 246,
+  "new_inferences_recorded": 12,
+  "swrl_head_triples_added": 6,
+  "query_result_count": 1,
+  "validation_passed": true
+}

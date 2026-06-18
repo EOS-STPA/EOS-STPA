@@ -1,0 +1,23 @@
+name: Validate ontology reasoning
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Run validation
+        run: |
+          python scripts/run_validation.py             --ontology ontology/eos_stpa_avx.ttl             --query queries/delayed_red_light_validation.rq             --outdir _ci_results
+      - name: Display validation summary
+        run: cat _ci_results/validation_summary.json

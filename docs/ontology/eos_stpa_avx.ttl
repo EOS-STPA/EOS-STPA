@@ -1,0 +1,171 @@
+@prefix eos: <https://EOS-STPA.github.io/EOS-STPA/ontology#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix swrl: <http://www.w3.org/2003/11/swrl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://EOS-STPA.github.io/EOS-STPA/ontology> a owl:Ontology ;
+    rdfs:label "EOS-STPA AV-X ontology validation module"@en ;
+    rdfs:comment "Machine-readable proof-of-concept ontology and SWRL rule set for the delayed red-light validation case described in the EOS-STPA manuscript."@en ;
+    owl:versionInfo "1.0.0" .
+
+### Classes
+
+eos:InteractiveInput a owl:Class .
+eos:SignalControlInput a owl:Class ; rdfs:subClassOf eos:InteractiveInput .
+eos:SafetyAnalysisArtifact a owl:Class .
+eos:AbnormalInteractionCondition a owl:Class .
+eos:SAIC a owl:Class ;
+    rdfs:subClassOf eos:SafetyAnalysisArtifact,
+        eos:AbnormalInteractionCondition .
+eos:DelayedRedLightInput a owl:Class ;
+    rdfs:subClassOf eos:SignalControlInput ;
+    owl:equivalentClass [ a owl:Class ;
+        owl:intersectionOf (
+            eos:SignalControlInput
+            [ a owl:Restriction ; owl:onProperty eos:hasObject ; owl:hasValue eos:RedLight ]
+            [ a owl:Restriction ; owl:onProperty eos:hasFaultMode ; owl:hasValue eos:Late ]
+        )
+    ] .
+
+eos:DelayedRedLightSAIC a owl:Class ;
+    rdfs:subClassOf eos:SAIC,
+        [ a owl:Restriction ; owl:onProperty eos:leadsTo ; owl:hasValue eos:CollisionRelatedHazard ] .
+
+eos:DelayedRedLightSSC a owl:Class ;
+    rdfs:subClassOf eos:SSC,
+        [ a owl:Restriction ; owl:onProperty eos:constrains ; owl:hasValue eos:ACCS ],
+        [ a owl:Restriction ; owl:onProperty eos:requiresControlSubject ; owl:hasValue eos:VehicleAction ],
+        [ a owl:Restriction ; owl:onProperty eos:requiresControlObject ; owl:hasValue eos:InBraking ] .
+
+eos:Hazard a owl:Class .
+eos:SSC a owl:Class ; rdfs:subClassOf eos:SafetyAnalysisArtifact .
+eos:System a owl:Class .
+eos:ControlSubject a owl:Class .
+eos:ControlObject a owl:Class .
+eos:ConditionObject a owl:Class .
+eos:FaultMode a owl:Class .
+eos:ControlAction a owl:Class .
+
+### Object properties
+
+eos:hasObject a owl:ObjectProperty ;
+    rdfs:domain eos:InteractiveInput ;
+    rdfs:range eos:ConditionObject .
+
+eos:hasFaultMode a owl:ObjectProperty ;
+    rdfs:domain eos:InteractiveInput ;
+    rdfs:range eos:FaultMode .
+
+eos:affectsSystem a owl:ObjectProperty ;
+    rdfs:domain eos:InteractiveInput ;
+    rdfs:range eos:System .
+
+eos:requiredAction a owl:ObjectProperty ;
+    rdfs:domain eos:System ;
+    rdfs:range eos:ControlAction .
+
+eos:leadsTo a owl:ObjectProperty ;
+    rdfs:domain eos:SAIC ;
+    rdfs:range eos:Hazard .
+
+eos:requiresControlSubject a owl:ObjectProperty ;
+    rdfs:domain eos:SafetyAnalysisArtifact ;
+    rdfs:range eos:ControlSubject .
+
+eos:requiresControlObject a owl:ObjectProperty ;
+    rdfs:domain eos:SafetyAnalysisArtifact ;
+    rdfs:range eos:ControlObject .
+
+eos:hasConditionObject a owl:ObjectProperty ;
+    rdfs:domain eos:SAIC ;
+    rdfs:range eos:ConditionObject .
+
+eos:isOperationalizedBy a owl:ObjectProperty ;
+    rdfs:domain eos:SAIC ;
+    rdfs:range eos:SSC .
+
+eos:constrains a owl:ObjectProperty ;
+    rdfs:domain eos:SSC ;
+    rdfs:range eos:System .
+
+### Named individuals and instantiated scenario facts
+
+eos:RedLight a owl:NamedIndividual, eos:ConditionObject ; rdfs:label "Red light"@en .
+eos:Late a owl:NamedIndividual, eos:FaultMode ; rdfs:label "Late"@en .
+eos:ACCS a owl:NamedIndividual, eos:System ; rdfs:label "Adaptive Cruise Control System"@en .
+eos:Brake a owl:NamedIndividual, eos:ControlAction ; rdfs:label "Brake"@en .
+eos:CollisionRelatedHazard a owl:NamedIndividual, eos:Hazard ;
+    rdfs:label "Collision-related hazard involving other vehicles"@en .
+eos:VehicleAction a owl:NamedIndividual, eos:ControlSubject ; rdfs:label "Vehicle action"@en .
+eos:InBraking a owl:NamedIndividual, eos:ControlObject ; rdfs:label "In braking"@en .
+
+eos:SSC_DelayedRedLight_001 a owl:NamedIndividual, eos:DelayedRedLightSSC ;
+    rdfs:label "Vehicle action shall be in braking when traffic infrastructure provides late red light"@en ;
+    eos:constrains eos:ACCS .
+
+eos:Input_001 a owl:NamedIndividual, eos:SignalControlInput ;
+    rdfs:label "Delayed red-light input instance"@en ;
+    eos:hasObject eos:RedLight ;
+    eos:hasFaultMode eos:Late ;
+    eos:affectsSystem eos:ACCS .
+
+eos:ACCS eos:requiredAction eos:Brake .
+
+### SWRL variables
+
+eos:x a swrl:Variable .
+
+### R1: delayed-red-light SAIC classification
+
+eos:R1_DelayedRedLightClassification a swrl:Imp ;
+    rdfs:label "R1 delayed red-light SAIC classification"@en ;
+    swrl:body (
+        [ a swrl:ClassAtom ; swrl:classPredicate eos:SignalControlInput ; swrl:argument1 eos:x ]
+        [ a swrl:IndividualPropertyAtom ; swrl:propertyPredicate eos:hasObject ; swrl:argument1 eos:x ; swrl:argument2 eos:RedLight ]
+        [ a swrl:IndividualPropertyAtom ; swrl:propertyPredicate eos:hasFaultMode ; swrl:argument1 eos:x ; swrl:argument2 eos:Late ]
+        [ a swrl:IndividualPropertyAtom ; swrl:propertyPredicate eos:requiredAction ; swrl:argument1 eos:ACCS ; swrl:argument2 eos:Brake ]
+    ) ;
+    swrl:head (
+        [ a swrl:ClassAtom ; swrl:classPredicate eos:DelayedRedLightSAIC ; swrl:argument1 eos:x ]
+    ) .
+
+### R2: hazard retrieval
+
+eos:R2_HazardRetrieval a swrl:Imp ;
+    rdfs:label "R2 hazard retrieval"@en ;
+    swrl:body (
+        [ a swrl:ClassAtom ; swrl:classPredicate eos:DelayedRedLightSAIC ; swrl:argument1 eos:x ]
+        [ a swrl:IndividualPropertyAtom ; swrl:propertyPredicate eos:affectsSystem ; swrl:argument1 eos:x ; swrl:argument2 eos:ACCS ]
+    ) ;
+    swrl:head (
+        [ a swrl:IndividualPropertyAtom ; swrl:propertyPredicate eos:leadsTo ; swrl:argument1 eos:x ; swrl:argument2 eos:CollisionRelatedHazard ]
+    ) .
+
+### R3: SSC semantic-element retrieval
+
+eos:R3_SSCElementRetrieval a swrl:Imp ;
+    rdfs:label "R3 SSC semantic-element retrieval"@en ;
+    swrl:body (
+        [ a swrl:ClassAtom ; swrl:classPredicate eos:DelayedRedLightSAIC ; swrl:argument1 eos:x ]
+        [ a swrl:IndividualPropertyAtom ; swrl:propertyPredicate eos:affectsSystem ; swrl:argument1 eos:x ; swrl:argument2 eos:ACCS ]
+    ) ;
+    swrl:head (
+        [ a swrl:IndividualPropertyAtom ; swrl:propertyPredicate eos:requiresControlSubject ; swrl:argument1 eos:x ; swrl:argument2 eos:VehicleAction ]
+        [ a swrl:IndividualPropertyAtom ; swrl:propertyPredicate eos:requiresControlObject ; swrl:argument1 eos:x ; swrl:argument2 eos:InBraking ]
+        [ a swrl:IndividualPropertyAtom ; swrl:propertyPredicate eos:hasConditionObject ; swrl:argument1 eos:x ; swrl:argument2 eos:RedLight ]
+        [ a swrl:IndividualPropertyAtom ; swrl:propertyPredicate eos:hasFaultMode ; swrl:argument1 eos:x ; swrl:argument2 eos:Late ]
+    ) .
+
+### R4: connect the inferred SAIC to the instantiated SSC
+
+eos:R4_SSCOperationalization a swrl:Imp ;
+    rdfs:label "R4 SSC operationalization"@en ;
+    swrl:body (
+        [ a swrl:ClassAtom ; swrl:classPredicate eos:DelayedRedLightSAIC ; swrl:argument1 eos:x ]
+        [ a swrl:IndividualPropertyAtom ; swrl:propertyPredicate eos:affectsSystem ; swrl:argument1 eos:x ; swrl:argument2 eos:ACCS ]
+    ) ;
+    swrl:head (
+        [ a swrl:IndividualPropertyAtom ; swrl:propertyPredicate eos:isOperationalizedBy ; swrl:argument1 eos:x ; swrl:argument2 eos:SSC_DelayedRedLight_001 ]
+    ) .
