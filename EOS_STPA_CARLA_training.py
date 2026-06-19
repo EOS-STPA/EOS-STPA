@@ -143,7 +143,7 @@ class RewardConfig:
     lane_keeping_reward: float = 1.0
     adverse_weather_speed_penalty: float = -1.5
     perception_failure_penalty: float = -1.0
-    incremental_time_reward: bool = True
+    incremental_time_reward: bool = False
 
 @dataclass
 class PPOConfig:
@@ -327,7 +327,7 @@ class SignalizedRoute:
     lead_start_progress_m: float
     goal_progress_m: float
 
-def discover_signalized_route(world: Any, scenario: ScenarioConfig, requested_light_id: Optional[int]) -> SignalizedRoute:
+def discover_signalized_routes(world: Any, scenario: ScenarioConfig, requested_light_id: Optional[int]) -> List[SignalizedRoute]:
     lights = list(world.get_actors().filter('traffic.traffic_light*'))
     lights.sort(key=lambda actor: actor.id)
     if requested_light_id is not None:
@@ -361,16 +361,19 @@ def discover_signalized_route(world: Any, scenario: ScenarioConfig, requested_li
             goal_progress = min(route.length_m - 1.0, stop_projection.progress_m + scenario.goal_distance_after_stop_m)
             if goal_progress <= stop_projection.progress_m + 5.0:
                 continue
-            score = (abs(stop_projection.progress_m - required_back), 0 if not start_waypoint.is_junction else 1, light.id, stop_waypoint.road_id, stop_waypoint.lane_id)
+            score = (light.id, stop_waypoint.road_id, stop_waypoint.section_id, stop_waypoint.lane_id, stop_waypoint.s)
             candidates.append((score, route, light, stop_projection.progress_m))
     if not candidates:
-        raise RuntimeError('No suitable signalized route was found in Town03. Use --route-light-id after checking available traffic-light actors, or verify that Town03 is loaded.')
+        town_name = world.get_map().name.split('/')[-1]
+        raise RuntimeError('No suitable signalized routes were found in %s. Use --route-light-id after checking available traffic-light actors, or verify that the requested town is loaded.' % town_name)
     candidates.sort(key=lambda item: item[0])
-    _, route, light, stop_progress = candidates[0]
-    ego_progress = max(0.0, stop_progress - scenario.ego_initial_distance_to_stop_m)
-    lead_progress = max(ego_progress + 10.0, stop_progress - scenario.lead_initial_distance_to_stop_m)
-    goal_progress = min(route.length_m - 1.0, stop_progress + scenario.goal_distance_after_stop_m)
-    return SignalizedRoute(route=route, traffic_light=light, stop_progress_m=float(stop_progress), ego_start_progress_m=float(ego_progress), lead_start_progress_m=float(lead_progress), goal_progress_m=float(goal_progress))
+    routes: List[SignalizedRoute] = []
+    for _, route, light, stop_progress in candidates:
+        ego_progress = max(0.0, stop_progress - scenario.ego_initial_distance_to_stop_m)
+        lead_progress = max(ego_progress + 10.0, stop_progress - scenario.lead_initial_distance_to_stop_m)
+        goal_progress = min(route.length_m - 1.0, stop_progress + scenario.goal_distance_after_stop_m)
+        routes.append(SignalizedRoute(route=route, traffic_light=light, stop_progress_m=float(stop_progress), ego_start_progress_m=float(ego_progress), lead_start_progress_m=float(lead_progress), goal_progress_m=float(goal_progress)))
+    return routes
 
 @dataclass
 class PIDController:
@@ -575,7 +578,9 @@ class EosStpaCarlaEnv(gym.Env):
         self.world = self._load_world()
         self.original_settings = self.world.get_settings()
         self._configure_world()
-        self.route_info = discover_signalized_route(self.world, config.scenario, config.carla.route_traffic_light_id)
+        self.route_infos = discover_signalized_routes(self.world, config.scenario, config.carla.route_traffic_light_id)
+        self.route_info = self.route_infos[0]
+        self.route_rng = np.random.default_rng(seed)
         try:
             self.world.freeze_all_traffic_lights(True)
         except Exception:
@@ -620,11 +625,14 @@ class EosStpaCarlaEnv(gym.Env):
         self.np_random = np.random.default_rng(seed)
         return [seed]
 
-    def route_metadata(self) -> Dict[str, float]:
-        stop_xyz, _ = self.route_info.route.sample(self.route_info.stop_progress_m)
-        start_xyz, _ = self.route_info.route.sample(self.route_info.ego_start_progress_m)
-        goal_xyz, _ = self.route_info.route.sample(self.route_info.goal_progress_m)
-        return {'traffic_light_actor_id': int(self.route_info.traffic_light.id), 'route_length_m': float(self.route_info.route.length_m), 'stop_progress_m': float(self.route_info.stop_progress_m), 'ego_start_progress_m': float(self.route_info.ego_start_progress_m), 'lead_start_progress_m': float(self.route_info.lead_start_progress_m), 'goal_progress_m': float(self.route_info.goal_progress_m), 'start_x': float(start_xyz[0]), 'start_y': float(start_xyz[1]), 'stop_x': float(stop_xyz[0]), 'stop_y': float(stop_xyz[1]), 'goal_x': float(goal_xyz[0]), 'goal_y': float(goal_xyz[1])}
+    def route_metadata(self) -> Dict[str, Any]:
+        routes: List[Dict[str, float]] = []
+        for route_info in self.route_infos:
+            stop_xyz, _ = route_info.route.sample(route_info.stop_progress_m)
+            start_xyz, _ = route_info.route.sample(route_info.ego_start_progress_m)
+            goal_xyz, _ = route_info.route.sample(route_info.goal_progress_m)
+            routes.append({'traffic_light_actor_id': int(route_info.traffic_light.id), 'route_length_m': float(route_info.route.length_m), 'stop_progress_m': float(route_info.stop_progress_m), 'ego_start_progress_m': float(route_info.ego_start_progress_m), 'lead_start_progress_m': float(route_info.lead_start_progress_m), 'goal_progress_m': float(route_info.goal_progress_m), 'start_x': float(start_xyz[0]), 'start_y': float(start_xyz[1]), 'stop_x': float(stop_xyz[0]), 'stop_y': float(stop_xyz[1]), 'goal_x': float(goal_xyz[0]), 'goal_y': float(goal_xyz[1])})
+        return {'route_count': len(routes), 'routes': routes}
 
     def _load_world(self):
         world = self.client.get_world()
@@ -760,7 +768,10 @@ class EosStpaCarlaEnv(gym.Env):
             self.seed(seed)
         elif not hasattr(self, 'np_random'):
             self.seed(self._legacy_seed)
+        if seed is not None:
+            self.route_rng = np.random.default_rng(seed)
         self._destroy_actors()
+        self.route_info = self.route_infos[int(self.route_rng.integers(0, len(self.route_infos)))]
         self.ego_controller.reset()
         self.lead_controller.reset()
         self.weather_name = str(self.np_random.choice(self.config.scenario.weather_set))
@@ -1110,7 +1121,6 @@ def build_config_from_args(args: argparse.Namespace) -> Config:
     config.scenario.eos_operational_layer_enabled = not args.disable_eos_operational_layer
     config.reward.omega_time = args.omega_time
     config.reward.omega_speed = args.omega_speed
-    config.reward.incremental_time_reward = not args.literal_elapsed_time_reward
     config.experiment.output_dir = args.output_dir
     config.ppo.checkpoint_frequency = args.checkpoint_frequency
     return config
@@ -1129,7 +1139,6 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument('--disable-eos-operational-layer', action='store_true')
     parser.add_argument('--omega-time', type=float, default=0.1)
     parser.add_argument('--omega-speed', type=float, default=0.05)
-    parser.add_argument('--literal-elapsed-time-reward', action='store_true')
     parser.add_argument('--train-seeds', default='0')
     parser.add_argument('--train-steps', type=int, default=100000)
     parser.add_argument('--device', default='auto')
